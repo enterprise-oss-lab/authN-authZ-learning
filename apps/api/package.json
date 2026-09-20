@@ -8,10 +8,12 @@
     "build": "tsc --noEmit",
     "check": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "test:openfga": "vitest run src/openfga/openfga.integration.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "@openfga/sdk": "^0.8.0",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.43.1",
     "hono": "^4.7.11",
@@ -21,7 +23,7 @@
     "@types/node": "^22.15.19",
     "@types/pg": "^8.15.2",
     "drizzle-kit": "^0.31.1",
-    "tsx": "^4.19.4"
+    "tsx": "^4.19.4",
+    "vitest": "^3.1.4"
   }
 }
-

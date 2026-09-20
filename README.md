@@ -14,6 +14,7 @@ cp .env.example .env
 pnpm install
 docker compose --env-file .env -f infra/compose/docker-compose.yml up -d
 pnpm db:migrate
+pnpm bootstrap:openfga
 pnpm dev
 ```
 
@@ -22,6 +23,8 @@ pnpm dev
 - OpenFGA: http://localhost:8081
 - Zitadel: http://localhost:8080
 
-Zitadel と OpenFGA のアプリケーション初期設定は、後続フェーズで `pnpm bootstrap` として自動化します。
+Zitadel のアプリケーション初期設定は、後続フェーズで `pnpm bootstrap` として自動化します。
+
+`pnpm bootstrap:openfga` は OpenFGA store と認可モデルを作成または再利用し、生成された ID をローカル `.env` に保存します。
 
 詳細な実装計画は [docs/zitadel-openfga-learning-plan.md](docs/zitadel-openfga-learning-plan.md) を参照してください。

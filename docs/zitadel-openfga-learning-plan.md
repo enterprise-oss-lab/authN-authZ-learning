@@ -144,13 +144,6 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 - [x] Docker Compose と `.env.example` を用意する。
 - [x] PostgreSQL の接続と Drizzle のマイグレーションを整備する。
 
-### フェーズ 2: 認可基盤
-
-- [ ] OpenFGA のモデルを `infra/openfga` に管理する。
-- [ ] OpenFGA クライアントと `check` / `listObjects` の薄いラッパーを実装する。
-- [ ] `pnpm bootstrap` で OpenFGA store・モデルを準備する。
-- [ ] `owner` / `editor` / `viewer` の関係を検証するテストを書く。
-
 ### フェーズ 1 完了後の学習チェック
 
 フェーズ 1 は、認証・認可を実装する前に必要なローカル基盤を動かす段階である。まだログインや API の権限制御は実装していない。
@@ -182,6 +175,38 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 - Hono はアクセストークンを検証して API の入口を守る（フェーズ 3 で実装）。
 - OpenFGA は「そのリソースにその操作をしてよいか」を判定する認可基盤である（フェーズ 2 で実装）。
 - PostgreSQL は文書本体を保存し、認可関係の正本にはしない。
+
+
+### フェーズ 2: 認可基盤
+
+- [x] OpenFGA のモデルを `infra/openfga` に管理する。
+- [x] OpenFGA クライアントと `check` / `listObjects` の薄いラッパーを実装する。
+- [x] `pnpm bootstrap:openfga` で OpenFGA store・モデルを準備する。
+- [x] `owner` / `editor` / `viewer` の関係を検証するテストを書く。
+
+### フェーズ 2 完了後の学習チェック
+
+フェーズ 2 では、文書に対する権限を OpenFGA の関係として表現した。まだ Zitadel の実ユーザーによるログインとは接続していないため、テストでは `user:owner` のような仮のユーザー ID を使う。
+
+- [x] `infra/openfga/model.json` を読み、`owner`、`editor`、`viewer` が文書に直接付与する関係であることを確認する。
+- [x] `can_read` が owner / editor / viewer、`can_write` が owner / editor、`can_share` と `can_delete` が owner だけを許可する派生関係であることを確認する。
+- [x] PostgreSQL の `documents` テーブルに所有者・共有権限の列を追加せず、OpenFGA を権限の正本にしていることを確認する。
+
+  ```sh
+  docker compose --env-file .env -f infra/compose/docker-compose.yml exec -T postgres \
+    psql -U app -d app -c '\d documents'
+  ```
+
+  `owner`、`editor`、`viewer` などの列がなく、文書データだけがあることを確認する。これらの関係は OpenFGA に保存される。
+- [x] `pnpm bootstrap:openfga` を続けて 2 回実行し、同じ OpenFGA store と認可モデル ID が表示されることを確認する。
+- [x] `pnpm test:openfga` を実行し、owner / editor / viewer の 4 テストが成功することを確認する。
+- [x] `DocumentAuthorizer.readableDocumentIds()` が SQL の権限条件ではなく、OpenFGA の `ListObjects` により閲覧可能な文書 ID を取得することを確認する。
+
+この時点で理解する責務分担:
+
+- API は「editor か」のようなロールを直接判定せず、「`can_write` が許可されるか」を OpenFGA に問い合わせる。
+- この操作ベースの判定により、将来の認可モデル変更（たとえばチーム共有）では API の操作判定を保ったまま関係定義を拡張できる。
+- フェーズ 3 で Zitadel の JWT にある `sub` を `user:<sub>` として OpenFGA へ渡し、仮のユーザー ID を実ユーザー ID に置き換える。
 
 ### フェーズ 3: 認証基盤
 

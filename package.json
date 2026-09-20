@@ -8,10 +8,14 @@
     "build": "pnpm -r build",
     "check": "pnpm -r check",
     "db:generate": "pnpm --filter @auth-learning/api db:generate",
-    "db:migrate": "pnpm --filter @auth-learning/api db:migrate"
+    "db:migrate": "pnpm --filter @auth-learning/api db:migrate",
+    "bootstrap:openfga": "tsx scripts/bootstrap-openfga.ts",
+    "test:openfga": "pnpm --filter @auth-learning/api test:openfga"
   },
   "devDependencies": {
+    "@openfga/sdk": "^0.8.0",
+    "dotenv": "^16.5.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }
-
