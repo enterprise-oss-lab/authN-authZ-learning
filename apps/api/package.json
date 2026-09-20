@@ -1,0 +1,27 @@
+{
+  "name": "@auth-learning/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "check": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.1",
+    "dotenv": "^16.5.0",
+    "drizzle-orm": "^0.43.1",
+    "hono": "^4.7.11",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.19",
+    "@types/pg": "^8.15.2",
+    "drizzle-kit": "^0.31.1",
+    "tsx": "^4.19.4"
+  }
+}
+

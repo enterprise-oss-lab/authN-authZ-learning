@@ -1,0 +1,17 @@
+{
+  "name": "authn-authz-learning",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @auth-learning/web --filter @auth-learning/api dev",
+    "build": "pnpm -r build",
+    "check": "pnpm -r check",
+    "db:generate": "pnpm --filter @auth-learning/api db:generate",
+    "db:migrate": "pnpm --filter @auth-learning/api db:migrate"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
+
