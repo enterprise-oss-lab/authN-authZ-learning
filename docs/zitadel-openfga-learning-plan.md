@@ -286,11 +286,39 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 
 ### フェーズ 4: 文書 API と UI
 
-- [ ] `documents` テーブルと CRUD API を実装する。
-- [ ] 作成時に OpenFGA の owner 関係を登録する。
-- [ ] 閲覧・編集・削除・共有 API に対応する FGA チェックを置く。
-- [ ] `ListObjects` を使った文書一覧 API を実装する。
-- [ ] React に一覧、詳細、編集、共有 UI を実装する。
+- [x] `documents` テーブルと CRUD API を実装する。
+- [x] 作成時に OpenFGA の owner 関係を登録する。
+- [x] 閲覧・編集・削除・共有 API に対応する FGA チェックを置く。
+- [x] `ListObjects` を使った文書一覧 API を実装する。
+- [x] React に一覧、詳細、編集、共有 UI を実装する。
+
+### フェーズ 4 完了後の学習チェック
+
+フェーズ 4 では、認証済みのユーザーが文書を操作する API と、各操作を OpenFGA で認可する境界を実装した。
+
+- [x] `http://localhost:5173` で文書を作成し、作成直後に自分の一覧へ表示されることを確認する。
+- [x] 文書を選択してタイトル・本文を変更し、保存後も変更が残ることを確認する。
+- [x] PostgreSQL には文書本体だけが保存され、所有者を表す列は追加されていないことを確認する。
+
+  ```sh
+  docker compose --env-file .env -f infra/compose/docker-compose.yml exec -T postgres \
+    psql -U app -d app -c 'SELECT * FROM documents;'
+  ```
+
+- [x] 文書作成では、API が PostgreSQL の `documents` 行を作成した後、OpenFGA に `document:<id>#owner@user:<sub>` を登録することを `apps/api/src/documents/routes.ts` から確認する。
+- [x] もし OpenFGA への owner 登録が失敗した場合、作成済みの PostgreSQL 行を削除して不整合を防ぐ補償処理があることを確認する。これは異なるサービスをまたぐ処理に単一の DB トランザクションを使えないためである。
+- [x] 一覧 API が PostgreSQL の所有者列で絞り込むのではなく、OpenFGA `ListObjects` で取得した文書 ID だけを PostgreSQL から読むことを確認する。
+- [x] 閲覧・編集・共有・削除に必要な OpenFGA 判定を整理する。
+
+  | 操作 | OpenFGA 判定 |
+  | --- | --- |
+  | 閲覧 | `can_read` |
+  | 編集 | `can_write` |
+  | 共有・共有解除 | `can_share` |
+  | 削除 | `can_delete` |
+
+- [ ] 別の Zitadel ユーザーの `sub` を共有先として入力し、`viewer` は閲覧だけ、`editor` は閲覧・編集できることを確認する。共有先ユーザーの作成は後続の手動セットアップまたは発展課題とする。
+- [x] API がロール名を直接見るのではなく、操作ごとに `can_*` 関係を OpenFGA へ問い合わせることを確認する。将来チーム共有を追加しても、API の操作判定を保ったままモデルを拡張できる。
 
 ### フェーズ 5: 品質と学習用ドキュメント
 
