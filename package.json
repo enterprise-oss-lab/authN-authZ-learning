@@ -11,10 +11,14 @@
     "db:migrate": "pnpm --filter @auth-learning/api db:migrate",
     "bootstrap:openfga": "tsx scripts/bootstrap-openfga.ts",
     "seed:editor": "tsx scripts/seed-zitadel-editor.ts",
-    "test:openfga": "pnpm --filter @auth-learning/api test:openfga"
+    "test:openfga": "pnpm --filter @auth-learning/api test:openfga",
+    "test:api:integration": "pnpm --filter @auth-learning/api exec vitest run src/documents/routes.integration.test.ts",
+    "test:auth": "pnpm --filter @auth-learning/api exec vitest run src/auth/middleware.test.ts",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@openfga/sdk": "^0.8.0",
+    "@playwright/test": "^1.52.0",
     "dotenv": "^16.5.0",
     "jose": "^6.1.0",
     "tsx": "^4.19.4",

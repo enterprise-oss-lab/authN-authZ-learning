@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 
 import type { AuthBindings } from '../auth/middleware.js';
@@ -11,6 +11,7 @@ import {
   type DocumentRole,
   openFgaConfigFromEnv,
 } from '../openfga/client.js';
+import { logAuthorizationDecision } from '../observability/log.js';
 
 const validRoles = new Set<DocumentRole>(['editor', 'viewer']);
 
@@ -30,11 +31,14 @@ const documentAuthorizer = () =>
   new DocumentAuthorizer(createOpenFgaClient(openFgaConfigFromEnv()));
 
 async function permitted(
+  requestId: string,
   userId: string,
   documentId: string,
   permission: DocumentPermission,
 ): Promise<boolean> {
-  return documentAuthorizer().can(userId, documentId, permission);
+  const allowed = await documentAuthorizer().can(userId, documentId, permission);
+  logAuthorizationDecision(requestId, userId, documentId, permission, allowed);
+  return allowed;
 }
 
 export function createDocumentRoutes() {
@@ -83,7 +87,7 @@ export function createDocumentRoutes() {
 
   app.get('/:id', async (context) => {
     const documentId = context.req.param('id');
-    if (!(await permitted(context.get('auth').subject, documentId, 'can_read'))) {
+    if (!(await permitted(context.get('requestId'), context.get('auth').subject, documentId, 'can_read'))) {
       return context.json({ error: 'forbidden' }, 403);
     }
 
@@ -97,7 +101,7 @@ export function createDocumentRoutes() {
 
   app.patch('/:id', async (context) => {
     const documentId = context.req.param('id');
-    if (!(await permitted(context.get('auth').subject, documentId, 'can_write'))) {
+    if (!(await permitted(context.get('requestId'), context.get('auth').subject, documentId, 'can_write'))) {
       return context.json({ error: 'forbidden' }, 403);
     }
 
@@ -119,7 +123,7 @@ export function createDocumentRoutes() {
 
   app.delete('/:id', async (context) => {
     const documentId = context.req.param('id');
-    if (!(await permitted(context.get('auth').subject, documentId, 'can_delete'))) {
+    if (!(await permitted(context.get('requestId'), context.get('auth').subject, documentId, 'can_delete'))) {
       return context.json({ error: 'forbidden' }, 403);
     }
 
@@ -129,7 +133,7 @@ export function createDocumentRoutes() {
 
   app.post('/:id/shares', async (context) => {
     const documentId = context.req.param('id');
-    if (!(await permitted(context.get('auth').subject, documentId, 'can_share'))) {
+    if (!(await permitted(context.get('requestId'), context.get('auth').subject, documentId, 'can_share'))) {
       return context.json({ error: 'forbidden' }, 403);
     }
 
@@ -146,7 +150,7 @@ export function createDocumentRoutes() {
 
   app.delete('/:id/shares', async (context) => {
     const documentId = context.req.param('id');
-    if (!(await permitted(context.get('auth').subject, documentId, 'can_share'))) {
+    if (!(await permitted(context.get('requestId'), context.get('auth').subject, documentId, 'can_share'))) {
       return context.json({ error: 'forbidden' }, 403);
     }
 

@@ -5,6 +5,7 @@ import type { AuthenticatedUser } from './jwt.js';
 export type AuthBindings = {
   Variables: {
     auth: AuthenticatedUser;
+    requestId: string;
   };
 };
 

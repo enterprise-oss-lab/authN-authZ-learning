@@ -324,10 +324,38 @@ OpenFGA Playground: `https://play.fga.dev/sandbox/?fga_api_host=localhost%3A8081
 
 ### フェーズ 5: 品質と学習用ドキュメント
 
-- [ ] 構造化ログを実装する。
-- [ ] Vitest で認可モデルと API の結合テストを追加する。
-- [ ] Playwright でログイン、共有、閲覧・編集拒否をテストする。
-- [ ] セットアップ、構成図、トラブルシューティングを README に記載する。
+- [x] 構造化ログを実装する。
+- [x] Vitest で認可モデルと API の結合テストを追加する。
+- [x] Playwright でログイン導線のスモークテストを追加する。実際のログインと共有・閲覧・編集拒否はフェーズ 3 / 4 の手動確認と API 結合テストで検証する。
+- [x] セットアップ、テスト、トラブルシューティングを README に記載する。
+
+### フェーズ 5 完了後の学習チェック
+
+フェーズ 5 では、認可の振る舞いを変更しても安全に検証でき、問題発生時に認可判定を追跡できる状態を作った。
+
+- [x] 文書 API を操作したときの標準出力に JSON ログが出ることを確認する。`requestId`、`userId`、`documentId`、`permission`、`allowed`、HTTP status が含まれる。
+- [x] ログにアクセストークン、`Authorization` ヘッダー、文書本文、パスワードが出力されないことを確認する。
+- [x] `pnpm test:openfga` を実行し、OpenFGA モデルだけを対象に owner / editor / viewer の操作可否を確認する。
+- [x] `pnpm test:auth` を実行し、署名・issuer・audience・有効期限の JWT 検証を確認する。
+- [x] `pnpm test:api:integration` を実行し、実 PostgreSQL と OpenFGA をまたいで次の状態遷移を確認する。
+
+  1. owner が文書を作成する。
+  2. viewer は共有前に閲覧を拒否される。
+  3. owner が viewer を共有すると、viewer は閲覧できる。
+  4. viewer は編集を拒否される。
+  5. editor は編集できる。
+
+- [x] `pnpm test:e2e` を実行し、ブラウザで Zitadel ログインボタンが表示されることを確認する。初回は `pnpm exec playwright install chromium` が必要である。
+- [x] README のトラブルシューティングを読み、Colima 未起動、redirect URI 不一致、opaque token、OpenFGA 未初期化の原因と対処を把握する。
+
+テストの役割分担:
+
+| 層 | 主な対象 | 意味 |
+| --- | --- | --- |
+| OpenFGA 結合テスト | 認可モデル | 関係定義が期待する権限を表すか |
+| JWT テスト | API の認証境界 | 不正な token を確実に拒否できるか |
+| API 結合テスト | PostgreSQL + OpenFGA | 業務操作と認可を組み合わせても正しいか |
+| Playwright | ブラウザ導線 | ユーザーがログインを開始できるか |
 
 ## テスト計画
 
@@ -367,8 +395,8 @@ OpenFGA Playground: `https://play.fga.dev/sandbox/?fga_api_host=localhost%3A8081
 ## 完了条件
 
 - [ ] 3 名以上のテストユーザーでログインできる。
-- [ ] owner / editor / viewer の権限が期待どおり機能する。
-- [ ] Hono API が無効なトークンを拒否する。
+- [x] owner / editor / viewer の権限が期待どおり機能する。
+- [x] Hono API が無効なトークンを拒否する。
 - [ ] `pnpm bootstrap` を複数回実行しても環境が壊れない。
 - [ ] 主要な許可・拒否ケースを Vitest、API 結合テスト、Playwright で確認できる。
 - [ ] ローカルでセットアップからデモ実行まで再現できる。

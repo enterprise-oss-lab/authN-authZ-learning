@@ -4,9 +4,12 @@ import { cors } from 'hono/cors';
 import { createAccessTokenVerifier, jwtVerifierConfigFromEnv } from './auth/jwt.js';
 import { requireAuthentication, type AuthBindings, type AccessTokenVerifier } from './auth/middleware.js';
 import { createDocumentRoutes } from './documents/routes.js';
+import { requestLogger } from './observability/log.js';
 
 export function createApp(verifyAccessToken?: AccessTokenVerifier) {
   const app = new Hono<AuthBindings>();
+
+  app.use('*', requestLogger());
 
   app.use(
     '*',
