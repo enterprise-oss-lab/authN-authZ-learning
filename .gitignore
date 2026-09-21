@@ -2,7 +2,7 @@ node_modules/
 dist/
 .env
 .env.local
+.secrets/
 coverage/
 playwright-report/
 test-results/
-

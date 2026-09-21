@@ -27,4 +27,14 @@ Zitadel のアプリケーション初期設定は、後続フェーズで `pnpm
 
 `pnpm bootstrap:openfga` は OpenFGA store と認可モデルを作成または再利用し、生成された ID をローカル `.env` に保存します。
 
+## 開発用 editor ユーザーの作成
+
+`pnpm seed:editor` は Zitadel Management API で、メール検証済み・パスワード設定済みの editor ユーザーを作成します。activation mail は送信しません。
+
+実行前に、Management API の権限を持つ Zitadel Machine User の JSON key を `.secrets/zitadel-seeder-key.json` に保存し、`.env` の `ZITADEL_MACHINE_KEY_PATH` にそのパスを設定してください。この key は Git 管理しません。作成後のユーザー ID は同じ `.env` の `ZITADEL_EDITOR_USER_ID` に保存され、次回実行時は再利用されます。
+
+```sh
+pnpm seed:editor
+```
+
 詳細な実装計画は [docs/zitadel-openfga-learning-plan.md](docs/zitadel-openfga-learning-plan.md) を参照してください。
