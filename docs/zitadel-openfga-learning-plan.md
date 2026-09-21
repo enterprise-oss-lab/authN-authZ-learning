@@ -202,6 +202,8 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 - [x] `pnpm test:openfga` を実行し、owner / editor / viewer の 4 テストが成功することを確認する。
 - [x] `DocumentAuthorizer.readableDocumentIds()` が SQL の権限条件ではなく、OpenFGA の `ListObjects` により閲覧可能な文書 ID を取得することを確認する。
 
+OpenFGA Playground: `https://play.fga.dev/sandbox/?fga_api_host=localhost%3A8081&fga_api_scheme=http`
+
 この時点で理解する責務分担:
 
 - API は「editor か」のようなロールを直接判定せず、「`can_write` が許可されるか」を OpenFGA に問い合わせる。
