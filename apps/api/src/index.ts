@@ -1,13 +1,12 @@
 import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
+import dotenv from 'dotenv';
+import { createApp } from './app.js';
 
-const app = new Hono();
-
-app.get('/health', (context) => context.json({ status: 'ok' }));
+dotenv.config({ path: new URL('../../../.env', import.meta.url) });
 
 const port = Number(process.env.API_PORT ?? 3000);
+const app = createApp();
 
 serve({ fetch: app.fetch, port }, () => {
   console.log(`API listening on http://localhost:${port}`);
 });
-

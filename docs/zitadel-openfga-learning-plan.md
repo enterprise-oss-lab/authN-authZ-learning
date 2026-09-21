@@ -210,10 +210,79 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 
 ### フェーズ 3: 認証基盤
 
-- [ ] `pnpm bootstrap` で Zitadel の OIDC アプリ、API audience、テストユーザーを設定する。
-- [ ] React に `oidc-client-ts` によるログイン、コールバック、ログアウトを実装する。
-- [ ] Hono に `jose` による JWKS キャッシュ付き JWT 検証ミドルウェアを実装する。
-- [ ] 署名・issuer・audience・有効期限の拒否ケースをテストする。
+- [x] Zitadel Console で React の OIDC アプリを設定する。User Agent / Authorization Code / PKCE を使い、Redirect URI は `http://localhost:5173/auth/callback`、Post Logout URI は `http://localhost:5173` とする。
+- [x] Access Token Type を JWT に設定する。
+- [x] React に `oidc-client-ts` によるログイン、コールバック、ログアウトを実装する。
+- [x] Hono に `jose` による JWKS キャッシュ付き JWT 検証ミドルウェアを実装する。
+- [x] 署名・issuer・audience・有効期限の拒否ケースをテストする。
+- [x] ブラウザでログインして得た JWT を React から Hono の `/me` へ送信し、同じ `sub` が返ることを確認する。
+
+### フェーズ 3 で実施した Zitadel Console 設定手順
+
+ローカル Zitadel の Management API 用 Machine User はまだ用意していないため、React 用 OIDC アプリは Console で手動設定した。
+
+1. `http://localhost:8080/ui/console` を開く。
+2. 初期管理者でログインする。ログイン名は `admin@auth-learning.localhost`、パスワードはローカル `.env` の `ZITADEL_FIRSTINSTANCE_ADMIN_PASSWORD` を使う。
+3. **Projects** から React 用アプリを作成する。
+4. OIDC 設定を次の値にする。
+
+   | 項目 | 値 |
+   | --- | --- |
+   | Application Type | User Agent |
+   | Grant Type | Authorization Code |
+   | Response Type | Code |
+   | Authentication Method | None |
+   | PKCE | 有効 |
+   | Redirect URI | `http://localhost:5173/auth/callback` |
+   | Post Logout URI | `http://localhost:5173` |
+
+5. **Token Settings** で **Auth Token Type** を `JWT` に変更して保存する。`Bearer Token` のままでは opaque token が発行され、API の JWKS 検証を行えない。
+6. 作成された **Client ID** を控える。この学習用アプリでは、SPA の Client ID を API の期待する audience として使う。
+7. ローカル専用の設定ファイルを更新する。これらのファイルは Git 管理しない。
+
+   ```dotenv
+   # .env
+   ZITADEL_ISSUER=http://localhost:8080
+   ZITADEL_SPA_CLIENT_ID=<Client ID>
+   ZITADEL_API_AUDIENCE=<Client ID>
+   WEB_ORIGIN=http://localhost:5173
+   ```
+
+   ```dotenv
+   # apps/web/.env.local
+   VITE_ZITADEL_ISSUER=http://localhost:8080
+   VITE_ZITADEL_CLIENT_ID=<Client ID>
+   VITE_ZITADEL_API_AUDIENCE=<Client ID>
+   VITE_API_URL=http://localhost:3000
+   ```
+
+8. アプリを起動する。
+
+   ```sh
+   pnpm dev
+   ```
+
+9. `http://localhost:5173` を開き、**Zitadel でログイン**を押す。ログイン後に `API verified token for: <sub>` と表示されれば、React → Zitadel → Hono の JWT 検証まで成功している。
+
+トークン設定を変更した場合は、古い opaque token が残らないようアプリでログアウトしてから再ログインする。
+
+### フェーズ 3 完了後の学習チェック
+
+フェーズ 3 では、ブラウザで取得した access token を API が受け取り、Zitadel の公開鍵で検証する認証境界を実装した。
+
+- [x] Zitadel の OIDC アプリが User Agent / Authorization Code / PKCE / Authentication Method: None で構成されていることを確認する。
+- [x] Redirect URI が `http://localhost:5173/auth/callback`、Post Logout URI が `http://localhost:5173` と完全一致していることを確認する。
+- [x] Token Settings の Auth Token Type が `JWT` であることを確認する。`Bearer Token` のままでは opaque token が発行され、Hono は JWKS による検証を行えない。
+- [x] `http://localhost:5173` でログインし、React にログイン済みユーザーの `sub` が表示されることを確認する。
+- [x] 続けて `API verified token for: <同じ sub>` が表示されることを確認する。これは React が access token を API に渡し、Hono が検証できたことを示す。
+- [x] React が API へ渡すのは ID token ではなく access token であることを、`apps/web/src/main.tsx` の `Authorization: Bearer ${user.access_token}` から確認する。
+- [x] Hono が Zitadel の JWKS を使い、署名・issuer・audience・有効期限を検証することを `apps/api/src/auth/jwt.ts` から確認する。
+- [x] 現在の学習用構成では SPA の Client ID を API の audience としていることを理解する。本番では専用 API audience または resource server を分離できる。
+- [x] 次のテストを実行し、トークンなし・issuer 不正・audience 不正・期限切れが 401 になることを確認する。
+
+  ```sh
+  pnpm --filter @auth-learning/api exec vitest run src/auth/middleware.test.ts
+  ```
 
 ### フェーズ 4: 文書 API と UI
 
@@ -280,5 +349,6 @@ Zitadel の最初の信頼の起点として、ローカルの `.env` に `ZITAD
 - メールアドレスによるユーザー検索・招待
 - Zitadel のソーシャルログイン
 - BFF と `HttpOnly` Cookie を用いたセッション管理
+- Zitadel の Machine User と JSON key を使った OIDC アプリ・テストユーザーの bootstrap 自動化
 - Bootstrap の CI 実行
 - 本番デプロイ、TLS、秘密情報管理
